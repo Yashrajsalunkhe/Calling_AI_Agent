@@ -1,0 +1,29 @@
+# =============================================================================
+# AI Calling Agent — Python Dependencies
+# =============================================================================
+
+# Web framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+
+# Database
+sqlalchemy[asyncio]==2.0.41
+aiosqlite==0.21.0
+alembic==1.15.2
+
+# Settings
+pydantic-settings==2.9.1
+
+# LLM Providers
+ollama==0.4.8
+google-genai==1.14.0
+
+# Security
+cryptography==44.0.3
+
+# HTTP client (for health checks)
+httpx==0.28.1
+
+# Testing
+pytest==8.3.5
+pytest-asyncio==0.25.3
