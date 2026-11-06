@@ -97,3 +97,11 @@ export function endConversation(sessionId) {
 export function getConversationHistory(sessionId) {
   return request(`/conversation/${sessionId}/history`);
 }
+
+// ── Text-to-speech ───────────────────────────────────────────────────────
+export function synthesizeSpeech(data) {
+  return request('/tts/synthesize', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}

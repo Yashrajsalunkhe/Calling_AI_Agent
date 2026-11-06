@@ -1,5 +1,22 @@
 import { useState, useRef, useEffect } from 'react'
-import { startConversation, sendMessage, endConversation, getAgents } from '../api/client'
+import { startConversation, sendMessage, endConversation, getAgents, synthesizeSpeech } from '../api/client'
+
+const TTS_LANGUAGES = [
+  ['en-IN', 'English (India)'],
+  ['hi-IN', 'Hindi'],
+  ['ml-IN', 'Malayalam'],
+  ['ta-IN', 'Tamil'],
+  ['te-IN', 'Telugu'],
+  ['kn-IN', 'Kannada'],
+  ['bn-IN', 'Bengali'],
+  ['mr-IN', 'Marathi'],
+  ['gu-IN', 'Gujarati'],
+  ['pa-IN', 'Punjabi'],
+  ['ur-IN', 'Urdu'],
+  ['ne-IN', 'Nepali'],
+  ['en-US', 'English (US)'],
+  ['en-GB', 'English (UK)'],
+]
 
 export default function MockCall() {
   const [agents, setAgents] = useState([])
@@ -11,8 +28,12 @@ export default function MockCall() {
   const [isActive, setIsActive] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [voiceError, setVoiceError] = useState('')
+  const [ttsLanguage, setTtsLanguage] = useState('en-IN')
+  const [ttsStyle, setTtsStyle] = useState('default')
   const messagesEndRef = useRef(null)
   const recognitionRef = useRef(null)
+  const audioRef = useRef(null)
+  const ttsEnabledRef = useRef(true)
   const transcriptRef = useRef('')
   const shouldSubmitRef = useRef(false)
   const sendMessageRef = useRef(null)
@@ -31,6 +52,7 @@ export default function MockCall() {
 
   useEffect(() => () => {
     recognitionRef.current?.stop()
+    audioRef.current?.pause()
     window.speechSynthesis?.cancel()
   }, [])
 
@@ -100,13 +122,35 @@ export default function MockCall() {
 
   sendMessageRef.current = handleSend
 
-  const speak = (text) => {
-    if (!text || !window.speechSynthesis) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 1
-    utterance.pitch = 1
-    window.speechSynthesis.speak(utterance)
+  const speak = async (text) => {
+    if (!text) return
+
+    if (ttsEnabledRef.current) {
+      try {
+        const result = await synthesizeSpeech({
+          text,
+          language: ttsLanguage,
+          style: ttsStyle,
+        })
+        audioRef.current?.pause()
+        const audio = new Audio(`data:${result.content_type};base64,${result.audio_b64}`)
+        audioRef.current = audio
+        await audio.play()
+        return
+      } catch {
+        // Keep the mock call usable when the optional local TTS service is offline.
+        ttsEnabledRef.current = false
+      }
+    }
+
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = ttsLanguage
+      utterance.rate = 1
+      utterance.pitch = 1
+      window.speechSynthesis.speak(utterance)
+    }
   }
 
   const toggleListening = () => {
@@ -122,7 +166,7 @@ export default function MockCall() {
 
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition
     const recognition = new Recognition()
-    recognition.lang = 'en-US'
+    recognition.lang = ttsLanguage
     recognition.interimResults = false
     recognition.continuous = false
     transcriptRef.current = ''
@@ -291,6 +335,32 @@ export default function MockCall() {
                 <span className={`input-live-dot ${isListening ? 'active' : ''}`}></span>
                 {isListening ? 'Listening...' : 'Voice or text'}
               </div>
+              <select
+                className="form-select call-language-select"
+                value={ttsLanguage}
+                onChange={e => {
+                  setTtsLanguage(e.target.value)
+                  ttsEnabledRef.current = true
+                }}
+                aria-label="Choose conversation language"
+              >
+                {TTS_LANGUAGES.map(([code, label]) => (
+                  <option key={code} value={code}>{label}</option>
+                ))}
+              </select>
+              <select
+                className="form-select call-style-select"
+                value={ttsStyle}
+                onChange={e => {
+                  setTtsStyle(e.target.value)
+                  ttsEnabledRef.current = true
+                }}
+                aria-label="Choose voice style"
+              >
+                <option value="default">Calm voice</option>
+                <option value="warm">Warm voice</option>
+                <option value="formal">Formal voice</option>
+              </select>
               <input
                 className="chat-input"
                 type="text"

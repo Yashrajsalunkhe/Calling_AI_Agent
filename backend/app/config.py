@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.0-flash"
 
+    # ── Text-to-speech ────────────────────────────────────────────────────
+    VEXYL_TTS_URL: str = ""
+    VEXYL_TTS_API_KEY: str = ""
+    VEXYL_TTS_TIMEOUT_SECONDS: int = 30
+
     # ── Application ───────────────────────────────────────────────────────
     APP_SECRET_KEY: str = "change-this-to-a-random-secret-key"
     DATABASE_URL: str = "sqlite+aiosqlite:///./calling_agent.db"

@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import agents, conversation, providers, settings
+from app.routers import agents, conversation, providers, settings, tts
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -64,6 +64,7 @@ app.include_router(settings.router)
 app.include_router(providers.router)
 app.include_router(agents.router)
 app.include_router(conversation.router)
+app.include_router(tts.router)
 
 
 # ── Root ──────────────────────────────────────────────────────────────────────
